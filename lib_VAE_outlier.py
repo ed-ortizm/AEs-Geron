@@ -22,14 +22,20 @@ class DenseVAE:
     ############################################################################
     def __init__(self, encoder:'keras.model', decoder:'keras.model'):
 
-        self.encoder = encoder
-        self.decoder = decoder
+        self.encoder = encoder.encoder
+        self.decoder = decoder.decoder
 
         self.n_input_dimensions = encoder.n_input_dimensions
         self.inputs = Input(shape=(self.n_input_dimensions,),
             name='vae_input_layer')
 
         self.vae = self.build_vae()
+    ############################################################################
+    def plot_model(self):
+
+        plot_model(self.vae, to_file='DenseVAE.png', show_shapes='True')
+        plot_model(self.encoder, to_file='DenseEncoder.png', show_shapes='True')
+        plot_model(self.decoder, to_file='DenseDecoder.png', show_shapes='True')
     ############################################################################
     def summary(self):
         self.encoder.summary()
@@ -39,7 +45,7 @@ class DenseVAE:
     def build_vae(self):
 
         vae = Model(self.inputs,
-            self.decoder.decoder(self.encoder.encoder(self.inputs)),
+            self.decoder(self.encoder(self.inputs)),
             name='DenseVAE'
         )
 
@@ -57,6 +63,10 @@ class DenseDecoder:
         self.n_hiden_layers = n_hiden_layers
 
         self.decoder = self.build_decoder()
+    ############################################################################
+    def plot_model(self):
+
+        plot_model(self.decoder, to_file='DenseDecoder.png', show_shapes='True')
     ###########################################################################
     def summary(self):
 
@@ -111,6 +121,10 @@ class DenseEncoder:
             name='encoder_input_layer')
 
         self.encoder = self.build_encoder()
+    ############################################################################
+    def plot_model(self):
+
+        plot_model(self.encoder, to_file='DenseEncoder.png', show_shapes='True')
     ###########################################################################
     def summary(self):
 
