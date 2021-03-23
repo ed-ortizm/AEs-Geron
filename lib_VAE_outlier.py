@@ -17,12 +17,34 @@ from tensorflow.keras.utils import plot_model
 from constants_VAE_outlier import sdss_data_proc
 
 ################################################################################
-class VAE:
-    """ VAE for outlier detection using tf.keras
-    """
-
+class DenseVAE:
+    """ VAE for outlier detection using tf.keras """
+    ############################################################################
     def __init__(self, encoder:'keras.model', decoder:'keras.model'):
-        pass
+
+        self.encoder = encoder
+        self.decoder = decoder
+
+        self.n_input_dimensions = encoder.n_input_dimensions
+        self.inputs = Input(shape=(self.n_input_dimensions,),
+            name='vae_input_layer')
+
+        self.vae = self.build_vae()
+    ############################################################################
+    def summary(self):
+        self.encoder.summary()
+        self.decoder.summary()
+        self.vae.summary()
+    ############################################################################
+    def build_vae(self):
+
+        vae = Model(self.inputs,
+            self.decoder.decoder(self.encoder.encoder(self.inputs)),
+            name='DenseVAE'
+        )
+
+        return vae
+    ############################################################################
 ################################################################################
 class DenseDecoder:
 
@@ -60,7 +82,7 @@ class DenseDecoder:
             if n_units==self.n_hiden_layers[-1]:
                 output_layer = self._output_layer(n_units, X)
 
-        decoder = Model(input_layer, output_layer, name='decoder')
+        decoder = Model(input_layer, output_layer, name='DenseDecoder')
 
         return decoder
     ###########################################################################
@@ -74,7 +96,6 @@ class DenseDecoder:
         kernel_initializer=w_init)(X)
 
         return output_layer
-
 ################################################################################
 class DenseEncoder:
 
@@ -86,6 +107,9 @@ class DenseEncoder:
         self.n_hiden_layers = n_hiden_layers
         self.n_latent_dimensions = n_latent_dimensions
 
+        self.inputs = Input(shape=(self.n_input_dimensions,),
+            name='encoder_input_layer')
+
         self.encoder = self.build_encoder()
     ###########################################################################
     def summary(self):
@@ -94,24 +118,24 @@ class DenseEncoder:
     ###########################################################################
     def build_encoder(self):
 
-        inputs = Input(shape=(self.n_input_dimensions,), name='encoder_input')
+        X = self.inputs
         std_dev = np.sqrt(2./self.n_input_dimensions)
 
-        X = inputs
         for idx, n_units in enumerate(self.n_hiden_layers):
 
             w_init = keras.initializers.RandomNormal(mean=0., stddev=std_dev)
-            std_dev = np.sqrt(2./n_units)
 
-            layer = Dense(n_units, name=f'layer_{idx+1}_encoder',
+            layer = Dense(n_units, name=f'encoder_layer_{idx+1}',
                 activation='relu', kernel_initializer=w_init)(X)
 
             X = layer
 
+            std_dev = np.sqrt(2./n_units)
+
             if n_units==self.n_hiden_layers[-1]:
                 latent = self.stochastic_layer(n_units, X)
 
-        encoder = Model(inputs, latent, name='encoder')
+        encoder = Model(self.inputs, latent, name='DenseEncoder')
 
         return encoder
 
