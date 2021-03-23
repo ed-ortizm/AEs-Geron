@@ -14,7 +14,7 @@ from tensorflow.keras.losses import mse
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import plot_model
 
-from constants_AEs import sdss_data_proc
+from constants_VAE_outlier import sdss_data_proc
 
 ################################################################################
 class VAE:
@@ -28,6 +28,7 @@ class VAE:
         pass
 ################################################################################
 class DenseEncoder:
+
     def __init__(self, n_input_dimensions:'int', n_hiden_layers:'list',
         n_latent_dimensions:'int')->'keras.model':
 
@@ -35,25 +36,35 @@ class DenseEncoder:
         self.n_hiden_layers = n_hiden_layers
         self.n_latent_dimensions = n_latent_dimensions
 
-    def stocastic_layer(self):
+        self.encoder = self.build_encoder()
 
-        # w_init = keras.initializers.RandomNormal(mean=0.,
-        # stddev=np.sqrt(2./self.hid_dim[1]))
-        # latent_mu = Dense(self.hid_dim[2], name='latent_mu',
-        # kernel_initializer=w_init)(hidden_1)
-        # latent_ln_sigma = Dense(self.hid_dim[2], name='latent_ln_sigma',
-        # kernel_initializer=w_init)(hidden_1)
-        #
-        # latent = Lambda(self._sample_latent_features,
-        # output_shape=(self.hid_dim[2],),
-        # name='latent')([latent_mu, latent_ln_sigma])
-        #
-        #
-        # self.encoder = Model(inputs, latent, name='encoder')
-        # self.encoder.summary()
-        # # plot_model(self.encoder, to_file='encoder.png', show_shapes='True')
-        pass
-        
+    def _sample_latent_features(self, distribution):
+
+        z_m, z_s = distribution
+        batch = K.shape(z_m)[0]
+        dim = K.int_shape(z_m)[1]
+        epsilon = K.random_normal(shape=(batch, dim))
+
+        return z_m + K.exp(0.5*z_s)*epsilon
+
+    def stochastic_layer(self, n_units, X):
+
+        std_dev = np.sqrt(2./n_units)
+
+        w_init = keras.initializers.RandomNormal(mean=0., stddev=std_dev)
+
+        latent_mu = Dense(self.n_latent_dimensions, name='latent_mu',
+            kernel_initializer=w_init)(X)
+
+        latent_ln_sigma = Dense(self.n_latent_dimensions,
+            name='latent_ln_sigma', kernel_initializer=w_init)(X)
+
+        latent = Lambda(self._sample_latent_features,
+            output_shape=(self.n_latent_dimensions,),
+            name='latent')([latent_mu, latent_ln_sigma])
+
+        return latent
+
     def build_encoder(self):
 
         inputs = Input(shape=(self.n_input_dimensions,), name='encoder_input')
@@ -65,12 +76,21 @@ class DenseEncoder:
             w_init = keras.initializers.RandomNormal(mean=0., stddev=std_dev)
             std_dev = np.sqrt(2./n_units)
 
-            layer = Dense(n_units, name=f'layer_{idx:02},
+            layer = Dense(n_units, name=f'layer_{idx:02}',
                 activation='relu', kernel_initializer=w_init)(X)
 
             X = layer
-# Now comes the stocastic layer
-        pass
+
+            if n_units==self.n_hiden_layers[-1]:
+                latent = self.stochastic_layer(n_units, X)
+
+        encoder = Model(inputs, latent, name='encoder')
+
+        return encoder
+
+    def summary(self):
+
+        self.encoder.summary()
 
 ################################################################################
 class DenseDecoder:
