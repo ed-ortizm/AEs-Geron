@@ -50,7 +50,6 @@ class DenseVAEv2:
             name='DenseVAE')
 
         vae.compile(loss=self.loss, optimizer='adam')  # , lr = self.lr)
-
         return vae
     ############################################################################
     def build_encoder(self)->'None':
@@ -136,7 +135,7 @@ class DenseVAEv2:
 
         w_init = keras.initializers.RandomNormal(mean=0., stddev=std_dev)
 
-        output_layer = Dense(self.n_output_dimensions, name='decoder_output',
+        output_layer = Dense(self.n_input_dimensions, name='decoder_output',
             kernel_initializer=w_init)(X)
 
         return output_layer

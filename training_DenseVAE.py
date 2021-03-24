@@ -1,4 +1,5 @@
 #!/usr/bin/env python3.8
+# https://stackoverflow.com/questions/65366442/cannot-convert-a-symbolic-keras-input-output-to-a-numpy-array-typeerror-when-usi
 from tensorflow.python.framework.ops import disable_eager_execution
 disable_eager_execution()
 
@@ -12,7 +13,7 @@ from tensorflow import keras
 
 from constants_VAE_outlier import normalization_schemes
 from constants_VAE_outlier import spectra_dir, working_dir
-from lib_VAE_outlier import DenseEncoder, DenseDecoder, DenseVAE
+from lib_VAE_outlier import DenseVAEv2
 ###############################################################################
 ti = time.time()
 ###############################################################################
@@ -34,13 +35,11 @@ if sys.argv[3] in normalization_schemes:
 else:
     print('Normalyzation type should be: median, min_max or Z')
     sys.exit()
-
 ###############################################################################
 # Relevant directories
 training_data_dir = f'{spectra_dir}/normalized_data'
 ###############################################################################
 # Loading training data
-
 fname = f'spectra_{n_spectra}_{normalization_type}.npy'
 fpath = f'{training_data_dir}/{fname}'
 
@@ -54,30 +53,24 @@ else:
     print(f'There is no file: {fname}')
 ###############################################################################
 # Parameters for the DenseVAE
+n_input_dimensions = training_set.shape[1]
 n_latent_dimensions = 5
 ###########################################
 # encoder
-n_input_dimensions = training_set.shape[1]
-n_layers_encoder = [100, 50, 20]
+n_layers_encoder = [25]
 
-encoder = DenseEncoder(n_input_dimensions=n_input_dimensions,
-    n_hiden_layers=n_layers_encoder, n_latent_dimensions=n_latent_dimensions
-)
-###########################################
 # decoder
-n_layers_decoder = [20, 50, 100]
+n_layers_decoder = [25]
 
-decoder = DenseDecoder(n_latent_dimensions=n_latent_dimensions,
-    n_output_dimensions=n_input_dimensions, n_hiden_layers=n_layers_decoder
-)
-###########################################
-# vae
-vae = DenseVAE(encoder=encoder, decoder=decoder)
-vae.summary()
+# DenseVAEv2
+vae = DenseVAEv2(n_input_dimensions, n_layers_encoder, n_latent_dimensions,
+    n_layers_decoder)
+
+vae.vae.summary()
 ###############################################################################
 # Training the model
 
-vae.fit(spectra=training_set)
+vae.vae.fit(x=training_set, y=training_set, epochs=20)
 ###############################################################################
 # Defining directorie to save the model once it is trained
 models_dir = f'{working_dir}/models'
