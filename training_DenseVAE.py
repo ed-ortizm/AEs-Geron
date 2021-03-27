@@ -37,7 +37,7 @@ else:
     sys.exit()
 ###############################################################################
 # Relevant directories
-training_data_dir = f'{spectra_dir}/normalized_data'
+training_data_dir = f'{spectra_dir}/processed_spectra'
 ###############################################################################
 # Loading training data
 fname = f'spectra_{n_spectra}_{normalization_type}.npy'
@@ -70,7 +70,7 @@ vae.vae.summary()
 ###############################################################################
 # Training the model
 
-vae.vae.fit(x=training_set, y=training_set, epochs=20)
+vae.vae.fit(x=training_set, y=training_set, batch_size=32, epochs=20)
 ###############################################################################
 # Defining directorie to save the model once it is trained
 models_dir = f'{working_dir}/models'
