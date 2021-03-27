@@ -1,11 +1,3 @@
-# lime code
-xAI/lime/lime_code/
-# VS code
-.vscode/*
-# Explanations
-*.exp
-*.dill
-*.pk
 #Images and html
 *.png
 *.jpg
@@ -13,7 +5,8 @@ xAI/lime/lime_code/
 *.html
 # Heavy data
 *.csv
-!*AE.csv
+*.txt
+!requirements.txt
 # Astronomical data
 *.fit
 *.fits

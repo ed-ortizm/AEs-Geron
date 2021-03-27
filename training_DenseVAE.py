@@ -1,4 +1,5 @@
 #!/usr/bin/env python3.8
+# https://github.com/tensorflow/tensorflow/issues/47311
 # https://stackoverflow.com/questions/65366442/cannot-convert-a-symbolic-keras-input-output-to-a-numpy-array-typeerror-when-usi
 from tensorflow.python.framework.ops import disable_eager_execution
 disable_eager_execution()
