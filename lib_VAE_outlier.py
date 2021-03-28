@@ -21,7 +21,8 @@ class DenseVAE:
     ############################################################################
 
     def __init__(self, n_input_dimensions:'int', n_layers_encoder: 'list',
-        n_latent_dimensions:'int', n_layers_decoder: 'list')->'None':
+        n_latent_dimensions:'int', n_layers_decoder: 'list', batch_size:'int',
+        epochs:'int')->'None':
 
 
         self.n_input_dimensions = n_input_dimensions
@@ -29,6 +30,8 @@ class DenseVAE:
         self.n_layers_encoder = n_layers_encoder
         self.n_latent_dimensions = n_latent_dimensions
         self.n_layers_decoder = n_layers_decoder
+        self.batch_size = batch_size
+        self.epochs = epochs
 
         self.inputs = Input(shape=(self.n_input_dimensions,),
                             name='vae_input_layer')
@@ -162,53 +165,53 @@ class DenseVAE:
 
         return keras.losses.mse(y_true, y_pred)
     ############################################################################
-    # def fit(self, spectra:'2D np.array', batch_size:'int'=None, epochs:'int'=1
-    #     )-> 'None':
-    #
-    #     self.vae.fit(x=spectra, y=spectra, epochs=epochs, batch_size=batch_size)
+    def fit(self, spectra:'2D np.array')-> 'None':
+
+        self.vae.fit(x=spectra, y=spectra, epochs=self.epochs,
+            batch_size=self.batch_size)
+    ############################################################################
+    def predict(self, spectra:'2D np.array')-> '2D np.array':
+
+        if spectra.ndim == 1:
+            spectra = spectra.reshape(1, -1)
+
+        return self.vae.predict(spectra)
+    ############################################################################
+    def encode(self, spectra:'2D np.array')-> '2D np.array':
+
+        if spectra.ndim == 1:
+            spectra = spectra.reshape(1, -1)
+        return self.encoder(spectra)
+    ############################################################################
+    def decode(self, coding:'2D np.array')->'2D np.aray':
+
+        if coding.ndim==1:
+            coding = coding.reshape(1,-1)
+
+        return self.decoder(coding)
+    ############################################################################
+    def save_vae(self, fpath:'str'):
+
+        self.vae.save(f'{fpath}')
     # ############################################################################
-    # def predict(self, spectra:'2D np.array')-> '2D np.array':
-    #
-    #     if spectra.ndim == 1:
-    #         spectra = spectra.reshape(1, -1)
-    #
-    #     return self.vae.predict(spectra)
+    def save_encoder(self, fpath:'str'):
+
+        self.encoder.save(f'{fpath}')
+    ############################################################################
+    def save_decoder(self, fpath:'str'):
+
+        self.decoder.save(f'{fpath}')
+    ############################################################################
+    def plot_model(self):
+
+        plot_model(self.vae, to_file='DenseVAE.png', show_shapes='True')
+        plot_model(self.encoder, to_file='DenseEncoder.png', show_shapes='True')
+        plot_model(self.decoder, to_file='DenseDecoder.png', show_shapes='True')
     # ############################################################################
-    # def encode(self, spectra:'2D np.array')-> '2D np.array':
-    #
-    #     if spectra.ndim == 1:
-    #         spectra = spectra.reshape(1, -1)
-    #     return self.encoder(spectra)
-    # ############################################################################
-    # def decode(self, coding:'2D np.array')->'2D np.aray':
-    #
-    #     if coding.ndim==1:
-    #         coding = coding.reshape(1,-1)
-    #
-    #     return self.decoder(coding)
-    # ############################################################################
-    # def save_vae(self, fname:'str'='DenseVAE'):
-    #
-    #     self.vae.save(f'{fname}')
-    # ############################################################################
-    # def save_encoder(self, fname:'str'='DenseEncoder'):
-    #
-    #     self.encoder.save(f'{fname}')
-    # ############################################################################
-    # def save_decoder(self, fname:'str'='DenseDecoder'):
-    #
-    #     self.decoder.save(f'{fname}')
-    # ############################################################################
-    # def plot_model(self):
-    #
-    #     plot_model(self.vae, to_file='DenseVAE.png', show_shapes='True')
-    #     plot_model(self.encoder, to_file='DenseEncoder.png', show_shapes='True')
-    #     plot_model(self.decoder, to_file='DenseDecoder.png', show_shapes='True')
-    # ############################################################################
-    # def summary(self):
-    #     self.encoder.summary()
-    #     self.decoder.summary()
-    #     self.vae.summary()
+    def summary(self):
+        self.encoder.summary()
+        self.decoder.summary()
+        self.vae.summary()
 ###############################################################################
 class DenseDecoder:
 
