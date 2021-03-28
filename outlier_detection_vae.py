@@ -45,7 +45,7 @@ n_latent_dimensions = 10
 models_dir = f'{working_dir}/models'
 model_name = f'DenseVAE'
 model_path = f'{models_dir}/{model_name}'
-vae = keras.models.load_model(model_path)
+vae = keras.models.load_model(model_path, compile=False)
 ###############################################################################
 #
 ###############################################################################
