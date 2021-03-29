@@ -49,11 +49,11 @@ n_layers_decoder = [110, 549]
 
 # Other parameters
 # 1% to take advantage of stochastic part of stochastic gradient descent
-batch_size = int(n_galaxies*0.1)
+batch_size = int(n_galaxies*0.001)
 print(f'Batch size is: {batch_size}')
 
 epochs = 5
-learning_rate = 0.001
+learning_rate = 0.0001 # default: 0.001
 # DenseVAEv2
 vae = DenseVAE(n_input_dimensions, n_layers_encoder, n_latent_dimensions,
     n_layers_decoder, batch_size, epochs, learning_rate)

@@ -90,10 +90,10 @@ class DenseVAE:
 
         for idx, n_units in enumerate(self.n_layers_encoder):
 
-            #w_init = keras.initializers.RandomNormal(mean=0., stddev=std_dev)
+            w_init = keras.initializers.RandomNormal(mean=0., stddev=std_dev)
 
             layer = Dense(n_units, name=f'encoder_layer_{idx+1}',
-                          activation='relu')(X) #, kernel_initializer=w_init)(X)
+                          activation='relu', kernel_initializer=w_init)(X)
 
             X = layer
 
@@ -110,10 +110,10 @@ class DenseVAE:
 
         std_dev = np.sqrt(2. / n_units)
 
-       # w_init = keras.initializers.RandomNormal(mean=0., stddev=std_dev)
+        w_init = keras.initializers.RandomNormal(mean=0., stddev=std_dev)
 
-        self.latent_mu = Dense(self.n_latent_dimensions, name='latent_mu')(X) #,
-            #kernel_initializer=w_init)(X)
+        self.latent_mu = Dense(self.n_latent_dimensions, name='latent_mu',
+            kernel_initializer=w_init)(X)
 
         self.latent_ln_sigma = Dense(self.n_latent_dimensions,
             name='latent_ln_sigma')(X) #, kernel_initializer=w_init)(X)
@@ -147,11 +147,11 @@ class DenseVAE:
 
         for idx, n_units in enumerate(self.n_layers_decoder):
 
-           # w_init = keras.initializers.RandomNormal(mean=0., stddev=std_dev)
+            w_init = keras.initializers.RandomNormal(mean=0., stddev=std_dev)
             std_dev = np.sqrt(2./n_units)
 
             layer = Dense(n_units, name=f'layer_{idx+1}_decoder',
-                          activation='relu')(X) #, kernel_initializer=w_init)(X)
+                          activation='relu', kernel_initializer=w_init)(X)
 
             X = layer
 
@@ -166,11 +166,10 @@ class DenseVAE:
 
         std_dev = np.sqrt(2./n_units)
 
-        #w_init = keras.initializers.RandomNormal(mean=0., stddev=std_dev)
+        w_init = keras.initializers.RandomNormal(mean=0., stddev=std_dev)
 
         output_layer = Dense(self.n_input_dimensions, name='decoder_output',
-        activation='sigmoid')(X) #,
-            #kernel_initializer=w_init)(X)
+        activation='relu', kernel_initializer=w_init)(X)
 
         return output_layer
     ############################################################################
