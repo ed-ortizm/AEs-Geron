@@ -168,7 +168,8 @@ class DenseVAE:
 
         #w_init = keras.initializers.RandomNormal(mean=0., stddev=std_dev)
 
-        output_layer = Dense(self.n_input_dimensions, name='decoder_output')(X) #,
+        output_layer = Dense(self.n_input_dimensions, name='decoder_output',
+        activation='sigmoid')(X) #,
             #kernel_initializer=w_init)(X)
 
         return output_layer
@@ -198,7 +199,7 @@ class DenseVAE:
     def fit(self, spectra:'2D np.array')-> 'None':
 
         self.vae.fit(x=spectra, y=spectra, epochs=self.epochs,
-            batch_size=self.batch_size)
+            batch_size=self.batch_size, verbose=1)
     ############################################################################
     def predict(self, spectra:'2D np.array')-> '2D np.array':
 

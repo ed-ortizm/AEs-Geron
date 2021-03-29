@@ -52,7 +52,7 @@ n_layers_decoder = [110, 549]
 batch_size = int(n_galaxies*0.1)
 print(f'Batch size is: {batch_size}')
 
-epochs = 20
+epochs = 5
 learning_rate = 0.001
 # DenseVAEv2
 vae = DenseVAE(n_input_dimensions, n_layers_encoder, n_latent_dimensions,
@@ -62,7 +62,9 @@ vae.summary()
 ###############################################################################
 # Training the model
 
-vae.fit(spectra=training_set[:, :-5])
+history = vae.fit(spectra=training_set[:, :-5])
+print(type(history))
+print(history)
 ###############################################################################
 # Defining directorie to save the model once it is trained
 
