@@ -14,7 +14,7 @@ n_spectra, normalization_type, local = input_handler(script_arguments=sys.argv)
 ###############################################################################
 # Relevant directories
 training_data_dir = f'{spectra_dir}/normalized_data'
-predicted_data_dir = f'{spectra_dir}/AE_predicted'
+generated_data_dir = f'{spectra_dir}/AE_outlier'
 models_dir = f'{working_dir}/models/AE'
 ###############################################################################
 # Loading training data
@@ -34,7 +34,7 @@ else:
 # Loading AEs predicted data for outlier detection
 
 reconstructed_set_name = f'{training_set_name}_reconstructed'
-reconstructed_set_path = f'{predicted_data_dir}/{reconstructed_set_name}.npy'
+reconstructed_set_path = f'{generated_data_dir}/{reconstructed_set_name}.npy'
 
 if os.path.exists(reconstructed_set_path):
 
@@ -71,33 +71,43 @@ else:
     np.save(f'{reconstructed_set_path}', reconstructed_set)
 ###############################################################################
 # Outlier detection
+if local:
+    n_top_spectra = 100
+else:
+    n_top_spectra = 10_000
+
 metrics = ['mse']
 for metric in metrics:
 
     if metric == "lp":
         p = 0.1
-        outlier = Outlier(model_path = model_path, o_scores_path=o_scores_path,
-            metric=metric, p=p)
+        outlier = Outlier(metric=metric, p=p)
 
     else:
-        outlier = Outlier(model_path = model_path, o_scores_path=o_scores_path,
-            metric=metric)
+        outlier = Outlier(metric=metric)
+    ############################################################################
+    print(f'Loading outlier scores')
 
-    print(f'Computing/loading outlier scores: the labels ')
+    if os.path.exists(f'{generated_data_dir}/{metric}_o_score.npy'):
 
-    if os.path.exists(f'{o_scores_path}/{metric}_o_score.npy'):
-        o_scores = np.load(f'{o_scores_path}/{metric}_o_score.npy')
+        o_scores = np.load(f'{generated_data_dir}/{metric}_o_score.npy')
+
     else:
-        o_scores = outlier.score(O=training_data)
-        np.save(f'{o_scores_path}/{metric}_o_score.npy', o_scores)
 
-    t1 = time.time()
-    # Check if they are normalized
-    print(f't1: {t1-ti:.2f} s')
-    ################################################################################
-    ## Selecting top outliers
-    print(f'Computing top reconstructions for {metric} metric')
-    most_normal_ids, most_oulying_ids = outlier.top_reconstructions(O=training_data, n_top_spectra=n_top_spectra)
+        o_scores = outlier.score(O=training_set[:, :-5], R=reconstructed_set)
+        np.save(f'{generated_data_dir}/{metric}_o_score.npy', o_scores)
+    ############################################################################
+    #Selecting top outliers
+    print(f'Computing top reconstructions for {metric} metric\n')
+    most_normal_ids, most_outlying_ids = outlier.top_reconstructions(
+        scores=o_scores, n_top_spectra=n_top_spectra)
+
+    print('Saving top outliers data')
+
+    np.save(f'{generated_data_dir}/most_normal_ids_{metric}.npy',
+        most_normal_ids)
+    np.save(f'{generated_data_dir}/most_outlying_ids_{metric}.npy',
+        most_outlying_ids)
 
 ###############################################################################
 ###############################################################################
