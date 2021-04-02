@@ -35,20 +35,24 @@ else:
 # Parameters for the AEDense
 n_galaxies = training_set.shape[0]
 n_input_dimensions = training_set[:, :-5].shape[1]
-n_latent_dimensions = 10
+n_latent_dimensions = 5
 ###########################################
 # encoder
-n_layers_encoder = [600, 100]
+n_layers_encoder = [500, 50]
 
 # decoder
-n_layers_decoder = [100, 600]
+n_layers_decoder = [50, 500]
 
 # Other parameters
 # 1% to take advantage of stochastic part of stochastic gradient descent
 batch_size = int(n_galaxies*0.01)
 print(f'Batch size is: {batch_size}')
 
-epochs = 20
+if local:
+    epochs = 5
+else:
+    epochs = 20
+
 learning_rate = 0.001 # default: 0.001
 loss = 'mse'
 
@@ -59,9 +63,8 @@ ae.summary()
 ###############################################################################
 # Training the model
 
-history = ae.fit(spectra=training_set[:, :-5])
-print(type(history))
-print(history)
+ae.fit(spectra=training_set[:, :-5])
+# PEnding to track history
 ###############################################################################
 # Defining directorie to save the model once it is trained
 models_dir = f'{working_dir}/models/AE'
@@ -69,9 +72,14 @@ models_dir = f'{working_dir}/models/AE'
 if not os.path.exists(models_dir):
     os.makedirs(models_dir, exist_ok=True)
 # Models names
-ae_name = f'DenseAE_{loss}_{n_galaxies}'
-encoder_name = f'DenseEncoder_{loss}_{n_galaxies}'
-decoder_name = f'DenseDecoder_{loss}_{n_galaxies}'
+# layers for name
+layers_encoder_str = '_'.join(str(unit) for unit in n_layers_encoder)
+layers_decoder_str = '_'.join(str(unit) for unit in n_layers_decoder)
+layers_str = f'{layers_encoder_str}_{n_latent_dimensions}_{layers_decoder_str}'
+
+ae_name = f'DenseAE_{loss}_{n_galaxies}_{layers_str}'
+encoder_name = f'DenseEncoder_{loss}_{n_galaxies}_{layers_str}'
+decoder_name = f'DenseDecoder_{loss}_{n_galaxies}_{layers_str}'
 
 if local:
 
