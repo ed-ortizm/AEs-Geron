@@ -15,6 +15,8 @@ n_spectra, normalization_type, local = input_handler(script_arguments=sys.argv)
 # Relevant directories
 training_data_dir = f'{spectra_dir}/normalized_data'
 generated_data_dir = f'{spectra_dir}/AE_outlier'
+if not os.path.exists(generated_data_dir):
+    os.makedirs(generated_data_dir)
 models_dir = f'{working_dir}/models/AE'
 ###############################################################################
 # Loading training data
@@ -34,6 +36,9 @@ else:
 # Loading AEs predicted data for outlier detection
 
 reconstructed_set_name = f'{training_set_name}_reconstructed'
+if local:
+    reconstructed_set_name = f'{reconstructed_set_name}_local'
+
 reconstructed_set_path = f'{generated_data_dir}/{reconstructed_set_name}.npy'
 
 if os.path.exists(reconstructed_set_path):
@@ -88,14 +93,24 @@ for metric in metrics:
     ############################################################################
     print(f'Loading outlier scores')
 
-    if os.path.exists(f'{generated_data_dir}/{metric}_o_score.npy'):
+    o_score_name = f'{metric}_o_score'
+    fname_normal = f'most_normal_ids_{metric}'
+    fname_outliers = f'most_outlying_ids_{metric}'
 
-        o_scores = np.load(f'{generated_data_dir}/{metric}_o_score.npy')
+    if local:
+        o_score_name = f'{o_score_name}_local'
+        fname_normal = f'most_normal_ids_{metric}_local'
+        fname_outliers = f'most_outlying_ids_{metric}_local'
+
+
+    if os.path.exists(f'{generated_data_dir}/{o_score_name}.npy'):
+
+        o_scores = np.load(f'{generated_data_dir}/{o_score_name}.npy')
 
     else:
 
         o_scores = outlier.score(O=training_set[:, :-5], R=reconstructed_set)
-        np.save(f'{generated_data_dir}/{metric}_o_score.npy', o_scores)
+        np.save(f'{generated_data_dir}/{o_score_name}.npy', o_scores)
     ############################################################################
     #Selecting top outliers
     print(f'Computing top reconstructions for {metric} metric\n')
@@ -104,9 +119,9 @@ for metric in metrics:
 
     print('Saving top outliers data')
 
-    np.save(f'{generated_data_dir}/most_normal_ids_{metric}.npy',
+    np.save(f'{generated_data_dir}/{fname_normal}.npy',
         most_normal_ids)
-    np.save(f'{generated_data_dir}/most_outlying_ids_{metric}.npy',
+    np.save(f'{generated_data_dir}/{fname_outliers}.npy',
         most_outlying_ids)
 
 ###############################################################################
