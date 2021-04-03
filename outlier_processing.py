@@ -18,27 +18,29 @@ training_data_dir = f'{spectra_dir}/normalized_data'
 generated_data_dir = f'{spectra_dir}/AE_outlier'
 layers_data_dirs = glob.glob(f'{generated_data_dir}/*/*')
 ###############################################################################
-# Loading training data
-training_set_name = f'spectra_{n_spectra}_{normalization_type}'
-training_set_path = f'{training_data_dir}/{training_set_name}.npy'
-
-if os.path.exists(training_set_path):
-
-    print(f'Loading training set: {training_set_name}.npy\n')
-
-    training_set =  np.load(f'{training_set_path}', mmap_mode='r')
-
-else:
-    print(f'There is no file: {training_set_name}.npy\n')
-    sys.exit()
-###############################################################################
 # Loading AEs predicted data for outlier detection
 
 metric = 'mse'
 
 for layers_data_dir in layers_data_dirs:
 
+    n_spectra = layers_data_dir.split('/')[-1]
     layers_str = layers_data_dir.split('/')[-2]
+    ###############################################################################
+    # Loading training data
+    training_set_name = f'spectra_{n_spectra}_{normalization_type}'
+    training_set_path = f'{training_data_dir}/{training_set_name}.npy'
+
+    if os.path.exists(training_set_path):
+
+        print(f'Loading training set: {training_set_name}.npy\n')
+
+        training_set =  np.load(f'{training_set_path}', mmap_mode='r')
+
+    else:
+        print(f'There is no file: {training_set_name}.npy\n')
+        sys.exit()
+    ###############################################################################
 
     reconstructed_set_name = f'{training_set_name}_reconstructed_{layers_str}'
 
@@ -55,9 +57,9 @@ for layers_data_dir in layers_data_dirs:
     ############################################################################
     # Data for outlier detection
 
-    o_score_name = f'{metric}_o_score_{layers_str}'
-    fname_normal = f'most_normal_ids_{metric}_{layers_str}'
-    fname_outliers = f'most_outlying_ids_{metric}_{layers_str}'
+    o_score_name = f'{metric}_o_score_{n_spectra}_{layers_str}'
+    fname_normal = f'most_normal_ids_{metric}_{n_spectra}_{layers_str}'
+    fname_outliers = f'most_outlying_ids_{metric}_{n_spectra}_{layers_str}'
 
     if local:
         o_score_name = f'{o_score_name}_local'
@@ -76,10 +78,10 @@ for layers_data_dir in layers_data_dirs:
     R_top_normal = reconstructed_set[normal_ids]
     ############################################################################
     # saving data
-    O_top_outliers_name = f'outliers_spectra_{outlier_ids.size}_{layers_str}'
-    R_top_outliers_name = f'outliers_reconstructed_{outlier_ids.size}_{layers_str}'
-    O_top_normal_name = f'normal_spectra_{normal_ids.size}_{layers_str}'
-    R_top_normal_name = f'normal_reconstructed_{normal_ids.size}_{layers_str}'
+    O_top_outliers_name = f'outliers_spectra_{outlier_ids.size}_{n_spectra}_{layers_str}'
+    R_top_outliers_name = f'outliers_reconstructed_{outlier_ids.size}_{n_spectra}_{layers_str}'
+    O_top_normal_name = f'normal_spectra_{normal_ids.size}_{n_spectra}_{layers_str}'
+    R_top_normal_name = f'normal_reconstructed_{normal_ids.size}_{n_spectra}_{layers_str}'
 
     if local:
 

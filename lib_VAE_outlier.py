@@ -733,7 +733,7 @@ class Outlier:
             present in O
         """
 
-        return np.square(R - O).mean(axis=1)
+        return np.square(R - O).sum(axis=1)
     ############################################################################
     def _chi2(self, O, R):
         """
@@ -752,7 +752,7 @@ class Outlier:
             present in O
         """
 
-        return (np.square(R - O) * (1 / np.abs(R))).mean(axis=1)
+        return (np.square(R - O) * (1 / np.abs(R))).sum(axis=1)
     ############################################################################
     def _mad(self, O, R):
         """

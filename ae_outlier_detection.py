@@ -11,14 +11,14 @@ from lib_VAE_outlier import input_handler, LoadAE, Outlier
 ti = time.time()
 ###############################################################################
 n_spectra, normalization_type, local = input_handler(script_arguments=sys.argv)
+layers_str = sys.argv[-1]
 ###############################################################################
 # Relevant directories
 training_data_dir = f'{spectra_dir}/normalized_data'
-generated_data_dir = f'{spectra_dir}/AE_outlier'
+generated_data_dir = f'{spectra_dir}/AE_outlier/{layers_str}/{n_spectra}'
 if not os.path.exists(generated_data_dir):
     os.makedirs(generated_data_dir)
 
-layers_str = '100_50_5_50_100'
 models_dir = f'{working_dir}/models/AE/{layers_str}'
 ###############################################################################
 # Loading training data
@@ -47,7 +47,7 @@ if os.path.exists(f'{reconstructed_set_path}'):
 
     print(f'Loading reconstructed data set: {reconstructed_set_name}\n')
 
-    reconstructed_set =  np.load(f'{reconstructed_set_path}', mmap_mode='r')
+    reconstructed_set =  np.load(f'{reconstructed_set_path}')
 
 else:
 
@@ -95,21 +95,23 @@ for metric in metrics:
     ############################################################################
     print(f'Loading outlier scores')
 
-    o_score_name = f'{metric}_o_score_{layers_str}'
-    fname_normal = f'most_normal_ids_{metric}_{layers_str}'
-    fname_outliers = f'most_outlying_ids_{metric}_{layers_str}'
+    o_score_name = f'{metric}_o_score_{n_spectra}_{layers_str}'
+    fname_normal = f'most_normal_ids_{metric}_{n_spectra}_{layers_str}'
+    fname_outliers = f'most_outlying_ids_{metric}_{n_spectra}_{layers_str}'
 
     if local:
         o_score_name = f'{o_score_name}_local'
         fname_normal = f'most_normal_ids_{metric}_local'
         fname_outliers = f'most_outlying_ids_{metric}_local'
 
-
+    print(f'This is the path to o_score \n {generated_data_dir}/{o_score_name}')
     if os.path.exists(f'{generated_data_dir}/{o_score_name}.npy'):
 
         o_scores = np.load(f'{generated_data_dir}/{o_score_name}.npy')
 
     else:
+
+        print(f'Computing {o_score_name}')
 
         o_scores = outlier.score(O=training_set[:, :-5], R=reconstructed_set)
         np.save(f'{generated_data_dir}/{o_score_name}.npy',
