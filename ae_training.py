@@ -1,8 +1,6 @@
 #!/usr/bin/env python3.8
-
 from argparse import ArgumentParser
 import os
-import sys
 import time
 
 import numpy as np
@@ -68,39 +66,39 @@ print(number_input_dimensions, layers_encoder, number_latent_dimensions,
 # Training the model
 
 history = ae.fit(spectra=training_set[:, :-5])
-print(type(history))
+################################################################################
+# Defining directorie to save the model once it is trained
+models_dir = f'{working_dir}/models/AE'
+
+if not os.path.exists(models_dir):
+    os.makedirs(models_dir)
+
+# Models names
+# layers for name
+encoder_str = script_arguments.encoder_layers
+decoder_str = script_arguments.decoder_layers
+layers_str = f'{encoder_str}_{number_latent_dimensions}_{decoder_str}'
+
+models_dir = f'{models_dir}/{layers_str}'
+
+if not os.path.exists(models_dir):
+    os.makedirs(models_dir)
+
+ae_name = f'DenseAE_{loss}_{layers_str}_{number_spectra}_nType_{normalization_type}'
+encoder_name = f'DenseEncoder_{loss}_{layers_str}_{number_spectra}_nType_{normalization_type}'
+decoder_name = f'DenseDecoder__{loss}_{layers_str}_{number_spectra}_nType_{normalization_type}'
+
+if local:
+
+    print('Saving model trained in local machine')
+    ae.save_ae(f'{models_dir}/{ae_name}_local')
+    ae.save_encoder(f'{models_dir}/{encoder_name}_local')
+    ae.save_decoder(f'{models_dir}/{decoder_name}_local')
+
+else:
+    ae.save_ae(f'{models_dir}/{ae_name}')
+    ae.save_encoder(f'{models_dir}/{encoder_name}')
+    ae.save_decoder(f'{models_dir}/{decoder_name}')
 ###############################################################################
-# # Defining directorie to save the model once it is trained
-# models_dir = f'{working_dir}/models/AE'
-#
-# if not os.path.exists(models_dir):
-#     os.makedirs(models_dir)
-# # Models names
-# # layers for name
-# layers_encoder_str = '_'.join(str(unit) for unit in layers_encoder)
-# layers_decoder_str = '_'.join(str(unit) for unit in layers_decoder)
-# layers_str = f'{layers_encoder_str}_{n_latent_dimensions}_{layers_decoder_str}'
-#
-# models_dir = f'{models_dir}/{layers_str}'
-#
-# if not os.path.exists(models_dir):
-#     os.makedirs(models_dir)
-#
-# ae_name = f'DenseAE_{loss}_{number_spectra}_{layers_str}'
-# encoder_name = f'DenseEncoder_{loss}_{number_spectra}_{layers_str}'
-# decoder_name = f'DenseDecoder_{loss}_{number_spectra}_{layers_str}'
-#
-# if local:
-#
-#     print('Saving model trained in local machine')
-#     ae.save_ae(f'{models_dir}/{ae_name}_local')
-#     ae.save_encoder(f'{models_dir}/{encoder_name}_local')
-#     ae.save_decoder(f'{models_dir}/{decoder_name}_local')
-#
-# else:
-#     ae.save_ae(f'{models_dir}/{ae_name}')
-#     ae.save_encoder(f'{models_dir}/{encoder_name}')
-#     ae.save_decoder(f'{models_dir}/{decoder_name}')
-# ###############################################################################
-# tf = time.time()
-# print(f'Running time: {tf-ti:.2f}')
+tf = time.time()
+print(f'Running time: {tf-ti:.2f}')

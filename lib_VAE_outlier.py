@@ -131,7 +131,8 @@ class AEDense:
 
         adam_optimizer = Adam(learning_rate=self.learning_rate)
 
-        ae.compile(loss=self.loss, optimizer=adam_optimizer)
+        ae.compile(loss=self.loss, optimizer=adam_optimizer,
+            metrics=['accuracy'])
 
         return ae
     ############################################################################
@@ -207,10 +208,10 @@ class AEDense:
 
         return output_layer
     ############################################################################
-    def fit(self, spectra:'2D np.array')-> 'None':
+    def fit(self, spectra:'2D np.array')-> 'tf.keras.callback.History':
 
         return self.ae.fit(x=spectra, y=spectra, epochs=self.epochs,
-            batch_size=self.batch_size, verbose=2)
+            batch_size=self.batch_size, shuffle=True, verbose=2)
     ############################################################################
     def save_ae(self, fpath:'str'):
 
