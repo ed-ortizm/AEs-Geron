@@ -8,6 +8,7 @@ import numpy as np
 from constants_VAE_outlier import spectra_dir, working_dir
 from lib_VAE_outlier import AEDense
 from lib_VAE_outlier import load_data
+from lib_VAE_outlier import plot_history
 ###############################################################################
 ti = time.time()
 ###############################################################################
@@ -60,11 +61,8 @@ ae = AEDense(number_input_dimensions, layers_encoder, number_latent_dimensions,
     layers_decoder, batch_size, epochs, learning_rate, loss)
 
 ae.summary()
-print(number_input_dimensions, layers_encoder, number_latent_dimensions,
-    layers_decoder, batch_size, epochs, learning_rate, loss)
 ###############################################################################
 # Training the model
-
 history = ae.fit(spectra=training_set[:, :-5])
 ################################################################################
 # Defining directorie to save the model once it is trained
@@ -74,9 +72,9 @@ if not os.path.exists(models_dir):
     os.makedirs(models_dir)
 
 # Models names
-# layers for name
 encoder_str = script_arguments.encoder_layers
 decoder_str = script_arguments.decoder_layers
+
 layers_str = f'{encoder_str}_{number_latent_dimensions}_{decoder_str}'
 
 models_dir = f'{models_dir}/{layers_str}'
@@ -84,21 +82,27 @@ models_dir = f'{models_dir}/{layers_str}'
 if not os.path.exists(models_dir):
     os.makedirs(models_dir)
 
-ae_name = f'DenseAE_{loss}_{layers_str}_{number_spectra}_nType_{normalization_type}'
-encoder_name = f'DenseEncoder_{loss}_{layers_str}_{number_spectra}_nType_{normalization_type}'
-decoder_name = f'DenseDecoder__{loss}_{layers_str}_{number_spectra}_nType_{normalization_type}'
+tail_model_name = (f'{loss}_{layers_str}_nSpectra_{number_spectra}_nType'
+    f'_{normalization_type}')
+
+ae_name = f'DenseAE_{tail_model_name}'
+encoder_name = f'DenseEncoder_{tail_model_name}'
+decoder_name = f'DenseDecoder_{tail_model_name}'
 
 if local:
 
     print('Saving model trained in local machine')
-    ae.save_ae(f'{models_dir}/{ae_name}_local')
-    ae.save_encoder(f'{models_dir}/{encoder_name}_local')
-    ae.save_decoder(f'{models_dir}/{decoder_name}_local')
 
-else:
-    ae.save_ae(f'{models_dir}/{ae_name}')
-    ae.save_encoder(f'{models_dir}/{encoder_name}')
-    ae.save_decoder(f'{models_dir}/{decoder_name}')
-###############################################################################
+    ae_name = f'DenseAE_{tail_model_name}_local'
+    encoder_name = f'DenseEncoder_{tail_model_name}_local'
+    decoder_name = f'DenseDecoder_{tail_model_name}_local'
+
+ae.save_ae(f'{models_dir}/{ae_name}')
+ae.save_encoder(f'{models_dir}/{encoder_name}')
+ae.save_decoder(f'{models_dir}/{decoder_name}')
+
+plot_history(history, f'{models_dir}/{ae_name}')
+
+################################################################################
 tf = time.time()
 print(f'Running time: {tf-ti:.2f}')

@@ -2,6 +2,7 @@ from glob import glob
 import os
 import sys
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import chisquare
@@ -18,6 +19,25 @@ from tensorflow.keras.utils import plot_model
 
 from constants_VAE_outlier import normalization_schemes
 from constants_VAE_outlier import spectra_dir
+
+###############################################################################
+def plot_history(history:'tf.keras.callback.History', save_to:'str'):
+
+    for key, value in history.history.items():
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+
+        ax.plot(value)
+
+        ax.set_title(f'Model {key}')
+        ax.set_xlabel(f'epochs')
+        ax.set_ylabel(f'{key}')
+
+        fig.savefig(f'{save_to}_{key}.png')
+        plt.close()
+
+        np.save(f'{save_to}_{key}.npy', value)
+
 ###############################################################################
 def load_data(file_name, file_path):
 
