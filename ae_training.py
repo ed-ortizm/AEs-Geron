@@ -46,12 +46,12 @@ batch_size = script_arguments.batch_size
 learning_rate = script_arguments.learning_rate
 ################################################################################
 # Relevant directories
-training_data_dir = f'{spectra_dir}/normalized_data'
+train_data_dir = f'{spectra_dir}/normalized_data'
 ################################################################################
 # Loading training data
-file_name = f'spectra_{number_spectra}_{normalization_type}'
-file_path = f'{training_data_dir}/{file_name}.npy'
-training_set = load_data(file_name, file_path)
+train_set_name = f'spectra_{number_spectra}_{normalization_type}'
+train_set_path = f'{train_data_dir}/{train_set_name}.npy'
+training_set = load_data(train_set_name, train_set_path)
 np.random.shuffle(training_set)
 ################################################################################
 # Parameters for the AEDense
@@ -102,6 +102,28 @@ ae.save_encoder(f'{models_dir}/{encoder_name}')
 ae.save_decoder(f'{models_dir}/{decoder_name}')
 
 plot_history(history, f'{models_dir}/{ae_name}')
+################################################################################
+#Reconstructed data for outlier detection
+generated_data_dir = f'{spectra_dir}/AE_outlier/{layers_str}/{number_spectra}'
+
+if not os.path.exists(generated_data_dir):
+    os.makedirs(generated_data_dir)
+
+tail_reconstructed = (f'{loss}_{layers_str}_nType_{normalization_type}')
+
+reconstructed_set_name = (
+    f'{train_set_name}_{tail_reconstructed}_reconstructed')
+
+if local:
+    reconstructed_set_name = f'{reconstructed_set_name}_local'
+
+reconstructed_set_path = f'{generated_data_dir}/{reconstructed_set_name}.npy'
+
+reconstructed_set = ae.predict(training_set[:, :-5])
+
+print(f'Saving reconstructed training set')
+
+np.save(f'{reconstructed_set_path}', reconstructed_set)
 
 ################################################################################
 tf = time.time()

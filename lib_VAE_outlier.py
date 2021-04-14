@@ -51,30 +51,6 @@ def load_data(file_name, file_path):
         print(f'There is no file: {file_name}')
         sys.exit()
 ###############################################################################
-def input_handler(script_arguments:'list'):
-
-    local = script_arguments[1]=='local'
-
-    if local:
-        print('We are in local\n')
-        n_spectra = 1_000
-    else:
-        print('We are in remote\n')
-        n_spectra = int(script_arguments[2])
-
-    if script_arguments[3] in normalization_schemes:
-
-        normalization_type = script_arguments[3]
-
-        print(f'normalization type: {normalization_type}')
-
-    else:
-        print('Normalyzation type should be: median, min_max or Z')
-        sys.exit()
-
-
-    return n_spectra, normalization_type, local
-###############################################################################
 class LoadAE:
     """ Load AE for outlier detection using tf.keras """
     ############################################################################
@@ -255,6 +231,13 @@ class AEDense:
         self.encoder.summary()
         self.decoder.summary()
         self.ae.summary()
+    ############################################################################
+    def predict(self, spectra:'2D np.array')-> '2D np.array':
+
+        if spectra.ndim == 1:
+            spectra = spectra.reshape(1, -1)
+
+        return self.ae.predict(spectra)
 ###############################################################################
 class VAEDense:
     """ VAE for outlier detection using tf.keras """
