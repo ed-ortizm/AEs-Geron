@@ -14,6 +14,30 @@ from tensorflow.keras.losses import mse
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import plot_model
 ###############################################################################
+class Base36:
+    ############################################################################
+    def decode(self, sub_class:'str'):
+
+        if ' ' in sub_class:
+            sub_class = sub_class.replace(' ', '')
+
+        elif sub_class == '':
+            sub_class = 'EMPCLS'
+
+        return int(sub_class, 36)
+    ############################################################################
+    def encode(self, sub_class:'int'):
+
+        alphabet, base36 = ['0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', '']
+
+        sub_class = abs(int(sub_class))
+
+        while sub_class:
+            sub_class, i = divmod(sub_class, 36)
+            base36 = alphabet[i] + base36
+
+        return base36 or alphabet[0]
+    ###########################################################################################################################################################
 def plot_history(history:'tf.keras.callback.History', save_to:'str'):
 
     for key, value in history.history.items():
