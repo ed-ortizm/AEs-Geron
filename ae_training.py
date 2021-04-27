@@ -59,7 +59,7 @@ number_snr = script_arguments.number_snr
 data_dir = f'{spectra_dir}/processed_spectra'
 ##########################################################################
 # Defining directorie to save the model once it is trained
-models_dir = f'{models_dir}/{layers_str}'
+models_dir = f'models/AE/{layers_str}'
 if not os.path.exists(models_dir):
     os.makedirs(models_dir)
 ##########################################################################

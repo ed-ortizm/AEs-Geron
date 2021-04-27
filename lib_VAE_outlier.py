@@ -15,14 +15,37 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import plot_model
 ###############################################################################
 class Base36:
+
     ############################################################################
     def decode(self, sub_class:'str'):
+
+        star_forming = 'STARFORMING'
+        broad_line = 'BROADLINE'
+        star_burst = 'STARBURST'
+        galaxy = 'GALAXY'
+        print(f'class in: {sub_class}')
+
+        if star_forming in sub_class:
+            sub_class = sub_class.replace(star_forming, 'SF')
+            #print(f'class out: {sub_class}')
+
+        if broad_line in sub_class:
+            sub_class = sub_class.replace(broad_line, 'BL')
+            #print(f'class out: {sub_class}')
+
+        if star_burst in sub_class:
+            sub_class = sub_class.replace(star_burst, 'SB')
+            #print(f'class out: {sub_class}')
+
+        if galaxy in sub_class:
+            sub_class = sub_class.replace(galaxy, 'G')
+            #print(f'class out: {sub_class}')
 
         if ' ' in sub_class:
             sub_class = sub_class.replace(' ', '')
 
         elif sub_class == '':
-            sub_class = 'EMPCLS'
+            sub_class = 'EC'
 
         return int(sub_class, 36)
     ############################################################################
