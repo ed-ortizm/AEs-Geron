@@ -31,6 +31,8 @@ parser.add_argument('--number_snr', '-n_snr', type=int)
 parser.add_argument('--metrics', type=str, nargs='+')
 parser.add_argument('--top_spectra', '-top', type=int)
 ############################################################################
+parser.add_argument('--percentages', '-%', type=int, nargs='+')
+############################################################################
 script_arguments = parser.parse_args()
 ################################################################################
 local = script_arguments.server == 'local'
@@ -48,6 +50,8 @@ number_snr = script_arguments.number_snr
 ############################################################################
 metrics = script_arguments.metrics
 number_top_spectra = script_arguments.top_spectra
+############################################################################
+percentages = script_arguments.percentages
 ################################################################################
 # Relevant directories
 data_dir = f'{spectra_dir}/procesesed_spectra'
@@ -67,103 +71,142 @@ test_set_path = f'{data_dir}/{test_set_name}.npy'
 test_set = load_data(test_set_name, test_set_path)
 ################################################################################
 # Reconstructed data for outlier detection
-tail_model_name = (f'{layers_str}_loss_{loss}_nTrain_{number_snr}_'
+tail_model_name = (f'{model}_{layers_str}_loss_{loss}_nTrain_{number_snr}_'
     f'nType_{normalization_type}')
 
-tail_reconstructed = f'reconstructed_{model}_{tail_model_name}'
+if local:
+    tail_model_name = f'{tail_model_name}_local'
+
+tail_reconstructed = f'reconstructed_{tail_model_name}'
 ############################################################################
 reconstructed_train_set_name = f'{train_set_name}_{tail_reconstructed}'
 reconstructed_test_set_name = f'{test_set_name}_{tail_reconstructed}'
-
-if local:
-    reconstructed_train_set_name = f'{reconstructed_train_set_name}_local'
-    reconstructed_test_set_name = f'{reconstructed_test_set_name}_local'
 ############################################################################
 reconstructed_train_set_path = (
     f'{generated_data_dir}/{reconstructed_train_set_name}.npy')
 
-train_set = load_data(reconstructed_train_set_name,
+reconstructed_train_set = load_data(reconstructed_train_set_name,
     reconstructed_train_set_path)
 ############################################################################
 reconstructed_test_set_path = (
     f'{generated_data_dir}/{reconstructed_test_set_name}.npy')
 
-test_set = = load_data(reconstructed_test_set_name,
+reconstructed_test_set = load_data(reconstructed_test_set_name,
     reconstructed_test_set_path)
 ################################################################################
 # Outlier detection
-tail_outlier_name = f'{model}_{layers_str}_loss_{loss}_{number_spectra}'
-
-if local:
-    tail_outlier_name = f'{tail_outlier_name}_local'
 
 for metric in metrics:
     outlier = Outlier(metric=metric)
+################################################################################
+    scores_train = outlier.score(O=train_set[:, :-8],
+        R=reconstructed_train_set, percentages=percentages)
+
+    for idx, scores in enumerate(scores_train):
+
+        percent_str = f'{percentages[idx]}_percent'
+        scores_dir = f'{generated_data_dir}/{metric}_score_{percent_str}'
     ############################################################################
-    percentages = [0.1, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0]
-    outlier_scores = outlier.score(O=train_set[:, :-5],
-        R=reconstructed_set, percentages=percentages)
+        scores_name = f'{metric}_score_{percent_str}_train_{tail_model_name}'
 
-    for idx, o_scores in enumerate(outlier_scores):
-
-        percentage = f'percentage_{int(percentages[idx] * 100)}'
-    ############################################################################
-        o_scores_name = (f'{metric}_o_score_{percentage}_'
-            f'{tail_outlier_name}')
-
-        np.save(
-        f'{generated_data_dir}/{o_scores_name}.npy', o_scores)
+        np.save(f'{scores_dir}/{scores_name}.npy', scores)
     ############################################################################
         normal_ids, outlier_ids = outlier.top_reconstructions(
-            scores=o_scores, n_top_spectra=number_top_spectra)
+            scores=scores, n_top_spectra=number_top_spectra)
 
         print('Saving top outliers IDs')
         ########################################################################
-        normal_name = (f'{metric}_normal_ids_{percentage}_'
-            f'nTop_{number_top_spectra}_{tail_outlier_name}')
-        np.save(f'{generated_data_dir}/{normal_name}.npy', normal_ids)
+        normal_name = f'normal_IDS_nTop_{number_top_spectra}_{scores_name}'
+        np.save(f'{scores_dir}/{normal_name}.npy', normal_ids)
         ########################################################################
-        outlier_name = (f'{metric}_outlier_ids_{percentage}_'
-            f'nTop_{number_top_spectra}_{tail_outlier_name}')
-        np.save(f'{generated_data_dir}/{outlier_name}.npy', outlier_ids)
+        outlier_name = f'outlier_IDS_nTop_{number_top_spectra}_{scores_name}'
+        np.save(f'{scores_dir}/{outlier_name}.npy', outlier_ids)
     ############################################################################
-        spec_top_outliers_name = (f'{metric}_outlier_spectra_{percentage}_'
-            f'nTop_{number_top_spectra}_{tail_outlier_name}')
+        spec_top_outliers_name = (
+            f'outlier_nTop_{number_top_spectra}_{scores_name}')
 
         spec_top_outliers = train_set[outlier_ids]
-
         spec_top_outliers = np.insert(spec_top_outliers, 0, outlier_ids)
 
-        np.save(f'{generated_data_dir}/{spec_top_outliers_name}.npy',
-            spec_top_outliers)
+        np.save(f'{scores_dir}/{spec_top_outliers_name}.npy', spec_top_outliers)
         ########################################################################
-        R_top_outliers_name = (f'{metric}_outlier_reconstructed_spectra_'
-            f'{percentage}_nTop_{number_top_spectra}_{tail_outlier_name}')
+        R_top_outliers_name = (
+            f'reconstructed_outlier_nTop_{number_top_spectra}_{scores_name}')
 
-        R_top_outliers = reconstructed_set[outlier_ids]
+        R_top_outliers = reconstructed_train_set[outlier_ids]
 
-        np.save(f'{generated_data_dir}/{R_top_outliers_name}.npy',
-            R_top_outliers)
+        np.save(f'{scores_dir}/{R_top_outliers_name}.npy', R_top_outliers)
         ########################################################################
-        spec_top_normal_name = (f'{metric}_normal_spectra_{percentage}_'
-            f'nTop_{number_top_spectra}_{tail_outlier_name}')
+        spec_top_normal_name = (
+            f'normal_nTop_{number_top_spectra}_{scores_name}')
 
         spec_top_normal = train_set[normal_ids]
 
         spec_top_normal = np.insert(spec_top_normal, 0, normal_ids)
 
-        np.save(f'{generated_data_dir}/{spec_top_normal_name}.npy',
-            spec_top_normal)
+        np.save(f'{scores_dir}/{spec_top_normal_name}.npy', spec_top_normal)
         ########################################################################
-        R_top_normal_name = (f'{metric}_normal_reconstructed_spectra_'
-            f'{percentage}_nTop_{number_top_spectra}_{tail_outlier_name}')
+        R_top_normal_name = (
+            f'reconstructed_normal_nTop_{number_top_spectra}_{scores_name}')
 
-        R_top_normal = reconstructed_set[normal_ids]
+        R_top_normal = reconstructed_train_set[normal_ids]
 
-        np.save(f'{generated_data_dir}/{R_top_normal_name}.npy',
-            R_top_normal)
-        ############################################################################
+        np.save(f'{scores_dir}/{R_top_normal_name}.npy', R_top_normal)
+################################################################################
+########TTTTTTTTTTTTTTTTTTTEEEEEEEEEEEEESSSSSSSSSSTTTTTTTTTTTTT
+    scores_test = outlier.score(O=test_set[:, :-8],
+        R=reconstructed_test_set, percentages=percentages)
+
+    for idx, scores in enumerate(scores_test):
+
+        percent_str = f'{percentages[idx]}_percent'
+        scores_dir = f'{generated_data_dir}/{metric}_score_{percent_str}'
     ############################################################################
+        scores_name = f'{metric}_score_{percent_str}_test_{tail_model_name}'
+
+        np.save(f'{scores_dir}/{scores_name}.npy', scores)
+    ############################################################################
+        normal_ids, outlier_ids = outlier.top_reconstructions(
+            scores=scores, n_top_spectra=number_top_spectra)
+
+        print('Saving top outliers IDs')
+        ########################################################################
+        normal_name = f'normal_IDS_nTop_{number_top_spectra}_{scores_name}'
+        np.save(f'{scores_dir}/{normal_name}.npy', normal_ids)
+        ########################################################################
+        outlier_name = f'outlier_IDS_nTop_{number_top_spectra}_{scores_name}'
+        np.save(f'{scores_dir}/{outlier_name}.npy', outlier_ids)
+    ############################################################################
+        spec_top_outliers_name = (
+            f'outlier_nTop_{number_top_spectra}_{scores_name}')
+
+        spec_top_outliers = test_set[outlier_ids]
+        spec_top_outliers = np.insert(spec_top_outliers, 0, outlier_ids)
+
+        np.save(f'{scores_dir}/{spec_top_outliers_name}.npy', spec_top_outliers)
+        ########################################################################
+        R_top_outliers_name = (
+            f'reconstructed_outlier_nTop_{number_top_spectra}_{scores_name}')
+
+        R_top_outliers = reconstructed_test_set[outlier_ids]
+
+        np.save(f'{scores_dir}/{R_top_outliers_name}.npy', R_top_outliers)
+        ########################################################################
+        spec_top_normal_name = (
+            f'normal_nTop_{number_top_spectra}_{scores_name}')
+
+        spec_top_normal = test_set[normal_ids]
+
+        spec_top_normal = np.insert(spec_top_normal, 0, normal_ids)
+
+        np.save(f'{scores_dir}/{spec_top_normal_name}.npy', spec_top_normal)
+        ########################################################################
+        R_top_normal_name = (
+            f'reconstructed_normal_nTop_{number_top_spectra}_{scores_name}')
+
+        R_top_normal = reconstructed_test_set[normal_ids]
+
+        np.save(f'{scores_dir}/{R_top_normal_name}.npy', R_top_normal)
 ###############################################################################
 tf = time.time()
 print(f'Running time: {tf-ti:.2f}')

@@ -75,7 +75,7 @@ data = load_data(data_set_name, data_set_path)
 data = data[: number_snr]
 # select the normal galaxies
 base36 = Base36()
-normal36, empty36 = base36.decode('STAR_FORMING'), base36.decode('')
+normal36, empty36 = base36.decode('SF'), base36.decode('')
 
 normal36_mask = data[:, -3] == normal36
 normal36_number = np.count_nonzero(normal36_mask)
