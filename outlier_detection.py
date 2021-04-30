@@ -7,9 +7,9 @@ import time
 
 import numpy as np
 
-from constants_VAE_outlier import spectra_dir, working_dir
+from constants_VAE_outlier import models_dir, spectra_dir, working_dir
 from library_outlier import Outlier
-from lib_VAE_outlier import load_data
+from lib_VAE_outlier import load_data, LoadAE
 
 ###############################################################################
 ti = time.time()
@@ -62,7 +62,7 @@ generated_data_dir = (
 test_set_path = f'{data_dir}/{test_set_name}.npy'
 test_set = load_data(test_set_name, test_set_path)
 ################################################################################
-# Reconstructed data for outlier detection
+# Reconstructed data
 tail_model_name = (f'{model}_{layers_str}_loss_{loss}_nTrain_{number_spectra}_'
     f'nType_{normalization_type}')
 
@@ -71,14 +71,33 @@ if local:
 
 tail_reconstructed = f'reconstructed_{tail_model_name}'
 ############################################################################
-############################################################################
 reconstructed_test_set_name = f'{test_set_name}_{tail_reconstructed}'
 
 reconstructed_test_set_path = (
     f'{generated_data_dir}/{reconstructed_test_set_name}.npy')
 
-reconstructed_test_set = load_data(reconstructed_test_set_name,
-    reconstructed_test_set_path)
+if os.path.exists(reconstructed_test_set_path):
+
+    reconstructed_test_set = load_data(reconstructed_test_set_name,
+        reconstructed_test_set_path)
+else:
+# DenseDecoder_200_50_6_50_200_loss_mse_nTrain_20000_nType_median
+    model_head = f'{models_dir}/{model}/{layers_str}/Dense'
+    model_tail = (f'{layers_str}_loss_{loss}_nTrain_{number_spectra}_'
+        f'nType_{normalization_type}')
+    #    f'nType_{normalization_type}')
+    if local:
+        model_tail = f'{model_tail}_local'
+
+    ae_path = f'{model_head}{model}_{model_tail}'
+    encoder_path = f'{model_head}Encoder_{model_tail}'
+    decoder_path = f'{model_head}Decoder_{model_tail}'
+
+    ae = LoadAE(ae_path, encoder_path, decoder_path)
+
+    reconstructed_test_set = ae.predict(test_set)
+
+    np.save(reconstructed_test_set_path, reconstructed_test_set)
 ################################################################################
 # Outlier detection
 
