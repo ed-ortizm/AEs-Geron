@@ -178,7 +178,7 @@ class Outlier:
 
             score = np.sum(score, axis=1)**(1 / self.p)
 
-            scores.append(score))
+            scores.append(score)
 
         return scores
     ############################################################################
