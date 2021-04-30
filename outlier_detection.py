@@ -54,19 +54,20 @@ number_top_spectra = script_arguments.top_spectra
 percentages = script_arguments.percentages
 ################################################################################
 # Relevant directories
-data_dir = f'{spectra_dir}/procesesed_spectra'
+data_dir = f'{spectra_dir}/processed_spectra'
 generated_data_dir = f'{spectra_dir}/{model}_outlier/{layers_str}/{number_snr}'
 ################################################################################
 # Loading data
 data_set_name = f'spectra_{number_spectra}_{normalization_type}'
 ############################################################################
-train_set_name = f'{data_set_name}_nSnr_{number_snr}_train'
+train_set_name = f'{data_set_name}_nSnr_{number_snr}_SF_train'
 train_set_path = f'{data_dir}/{train_set_name}.npy'
-
+print(train_set_path)
 train_set = load_data(train_set_name, train_set_path)
 ############################################################################
-test_set_name = f'{data_set_name}_nSnr_{number_snr}_test'
+test_set_name = f'{data_set_name}_nSnr_{number_snr}_noSF_test'
 test_set_path = f'{data_dir}/{test_set_name}.npy'
+print(test_set_path)
 
 test_set = load_data(test_set_name, test_set_path)
 ################################################################################
@@ -106,6 +107,9 @@ for metric in metrics:
 
         percent_str = f'{percentages[idx]}_percent'
         scores_dir = f'{generated_data_dir}/{metric}_score_{percent_str}'
+
+        if not os.path.exists(scores_dir):
+            os.makedirs(scores_dir)
     ############################################################################
         scores_name = f'{metric}_score_{percent_str}_train_{tail_model_name}'
 

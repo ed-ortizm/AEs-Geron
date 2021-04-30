@@ -46,11 +46,8 @@ class Outlier:
         """
 
         # check if I can use a dict or anything to avoid to much typing
-        if self.custom:
-            print(f'Computing the predictions of {model_name}')
-            return self.user_metric(O=O, R=R)
 
-        elif self.metric == 'mse':
+        if self.metric == 'mse':
             print(f'Computing the outlier scores')
             return self._mse(O=O, R=R, percentages=percentages)
 
@@ -97,7 +94,7 @@ class Outlier:
             # mse = np.square(R - O)
             mse = np.abs(R - O)/np.abs(O)
 
-            number_outlier_fluxes = int(percentage*mse.shape[1])
+            number_outlier_fluxes = int(0.01*percentage*mse.shape[1])
 
             highest_mse = np.argpartition(
                 mse, -1 * number_outlier_fluxes,
