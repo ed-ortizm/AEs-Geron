@@ -23,11 +23,7 @@ class Outlier:
 
         self.metric = metric
 
-        if metric=='lp':
-            self.p = p
-        else:
-            self.p = False
-
+        self.p = p
         self.epsilon = epsilon
     ############################################################################
     def score(self, O, R, percentages):
@@ -204,7 +200,7 @@ class Outlier:
 
             score = np.sum(score, axis=1)**(1 / self.p)
 
-            scores.append(score.sum(axis=1))
+            scores.append(score)
 
         return scores
     ############################################################################

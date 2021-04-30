@@ -26,7 +26,7 @@ parser.add_argument('--latent_dimensions', '-lat_dims', type=int)
 parser.add_argument('--decoder_layers', type=str)
 parser.add_argument('--loss', type=str)
 ############################################################################
-parser.add_argument('--test_set', '-t_set' type=str, nargs='+')
+parser.add_argument('--test_set', '-t_set', type=str)
 ############################################################################
 parser.add_argument('--metrics', type=str, nargs='+')
 parser.add_argument('--top_spectra', '-top', type=int)
@@ -46,7 +46,7 @@ layers_decoder = script_arguments.decoder_layers
 loss = script_arguments.loss
 layers_str = f'{layers_encoder}_{number_latent_dimensions}_{layers_decoder}'
 ############################################################################
-test_set_name = script_arguments.set_name
+test_set_name = script_arguments.test_set
 ############################################################################
 metrics = script_arguments.metrics
 number_top_spectra = script_arguments.top_spectra
@@ -57,6 +57,9 @@ percentages = script_arguments.percentages
 data_dir = f'{spectra_dir}/processed_spectra'
 generated_data_dir = (
     f'{spectra_dir}/{model}_outlier/{layers_str}/{number_spectra}')
+
+if not os.path.exists(generated_data_dir):
+    os.makedirs(generated_data_dir)
 ################################################################################
 # Loading data
 test_set_path = f'{data_dir}/{test_set_name}.npy'
@@ -81,7 +84,8 @@ if os.path.exists(reconstructed_test_set_path):
     reconstructed_test_set = load_data(reconstructed_test_set_name,
         reconstructed_test_set_path)
 else:
-# DenseDecoder_200_50_6_50_200_loss_mse_nTrain_20000_nType_median
+
+    #os.mkdirs(reconstructed)
     model_head = f'{models_dir}/{model}/{layers_str}/Dense'
     model_tail = (f'{layers_str}_loss_{loss}_nTrain_{number_spectra}_'
         f'nType_{normalization_type}')
@@ -95,7 +99,7 @@ else:
 
     ae = LoadAE(ae_path, encoder_path, decoder_path)
 
-    reconstructed_test_set = ae.predict(test_set)
+    reconstructed_test_set = ae.predict(test_set[:, :-8])
 
     np.save(reconstructed_test_set_path, reconstructed_test_set)
 ################################################################################
@@ -110,12 +114,12 @@ for metric in metrics:
     for idx, scores in enumerate(scores_test):
 
         percent_str = f'{percentages[idx]}_percent'
-        scores_dir = f'{generated_data_dir}/{metric}_score_{percent_str}'
+        scores_dir = f'{generated_data_dir}/{test_set_name}_{metric}_score_{percent_str}'
 
         if not os.path.exists(scores_dir):
             os.makedirs(scores_dir)
     ############################################################################
-        scores_name = f'{metric}_score_{percent_str}_train_{tail_model_name}'
+        scores_name = f'{test_set_name}_{metric}_score_{percent_str}_{tail_model_name}'
 
         np.save(f'{scores_dir}/{scores_name}.npy', scores)
     ############################################################################
