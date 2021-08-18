@@ -34,7 +34,6 @@ decoder = [int(units) for units in decoder_str.split('_')]
 architecture_str = f'{encoder_str}_{latent_dimensions}_{decoder_str}'
 ############################################################################
 # network hyperparameters
-loss = parser.get('hyper-parameters', 'loss')
 learning_rate = parser.getfloat('hyper-parameters', 'learning_rate')
 batch_size = parser.getint('hyper-parameters', 'batch_size')
 epochs = parser.getint('hyper-parameters', 'epochs')
@@ -49,7 +48,7 @@ vae = VariationalAE(input_dimensions=number_input_dimensions,
         decoder_units=decoder,
         batch_size=batch_size, epochs=epochs, learning_rate=learning_rate)
 
-# vae.summary()
+vae.summary()
 ###############################################################################
 # Loading training data
 ###############################################################################

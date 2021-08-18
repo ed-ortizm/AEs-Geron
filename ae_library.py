@@ -17,7 +17,8 @@ from tensorflow.keras.utils import plot_model
 class VariationalAE:
     """ VAE for outlier detection using tf.keras """
     ############################################################################
-    def __init__(self, input_dimensions:'int',
+    def __init__(self,
+        input_dimensions:'int',
         encoder_units:'list', latent_dimensions:'int', decoder_units:'list',
         batch_size:'int', epochs:'int', learning_rate:'float')->'None':
         """
@@ -34,30 +35,31 @@ class VariationalAE:
             batch_size: number of batches for the training set
             epochs: maximum number of epochs to train the algorithm
             learning_rate: value for the learning rate
-
-        OUTPUT
         """
 
         self.input_dimensions = input_dimensions
 
+        self.input_layer = Input(
+            shape=(self.input_dimensions,),
+            name='input_layer')
+
         self.encoder_units = encoder_units
         self.latent_dimensions = latent_dimensions
         self.decoder_units = decoder_units
+
         self.batch_size = batch_size
         self.epochs = epochs
-
-        self.input_layer = Input(shape=(self.input_dimensions,),
-                                name='input_layer')
-        self.output = None
+        self.learning_rate = learning_rate
 
         self.encoder = self.build_encoder()
-
         self.decoder = self.build_decoder()
 
-        self.learning_rate = learning_rate
         self.vae = self.build_vae()
     ############################################################################
-    def build_vae(self):
+    def build_vae(self)->'keras.model':
+        """
+        Builds and returns a compiled variational auto encoder using keras API
+        """
 
         output = self.decoder(self.encoder(self.input_layer)[2])
 
@@ -66,22 +68,35 @@ class VariationalAE:
 
         adam_optimizer = Adam(learning_rate=self.learning_rate)
 
-
-
-        vae.compile(loss=self.loss , optimizer=adam_optimizer,
+        loss = self.standard_loss
+        vae.compile(loss=loss , optimizer=adam_optimizer,
             metrics=['accuracy'])
 
         return vae
     ############################################################################
-    def loss(self, y_true, y_pred):
+    def standard_loss(self, y_true, y_pred)->'keras.custom_loss':
+        """
+        Standard loss function for the variational auto encoder, that is,
+        mean squared error for de reconstruction loss and the KL divergence.
+
+        INPUTS
+            y_true : input datapoint
+            y_pred : predicted value by the network
+
+        OUTPUT
+            loss function with the keras format that is compatible with the
+            .compile API
+        """
 
         mse = MeanSquaredError(y_true, y_pred)
         kl = KLDivergence(y_true, y_pred)
 
         return K.sum(mse, kl)
     ############################################################################
-    def build_encoder(self)->'None':
-
+    def build_encoder(self)-> 'keras.model':
+        """
+        Builds and returns a compiled variational encoder using keras API
+        """
         X = self.input_layer
         standard_deviation = np.sqrt(2. / self.input_dimensions)
 
@@ -115,16 +130,32 @@ class VariationalAE:
 
         return encoder
     ############################################################################
-    def sampling(self, arguments:'list')->'tf.keras.Lambda':
+    def sampling(self, arguments:'list')->'keras.custom_function':
+        """
+        function to sample into the latent representation
+
+        INPUTS
+            arguments: list containing z_mean and z_log_sigma.
+                Better to have in this wayfor the keras.lambda layer
+
+        OUTPUT
+            z : sampled latent variable
+        """
+
         z_mean, z_log_sigma = arguments
+
         epsilon = K.random_normal(
             shape=(K.shape(z_mean)[0], self.latent_dimensions),
             mean=0., stddev=0.1)
 
-        return z_mean + K.exp(z_log_sigma) * epsilon
-    ############################################################################
-    def build_decoder(self)->'None':
+        z = z_mean + K.exp(z_log_sigma) * epsilon
 
+        return z
+    ############################################################################
+    def build_decoder(self)->'keras.model':
+        """
+        Builds and returns a compiled decoder using keras API
+        """
         decoder_input = Input(shape=(self.latent_dimensions,),
             name='z_sampling')
 
@@ -153,8 +184,21 @@ class VariationalAE:
 
         return decoder
     ###########################################################################
-    def decoder_output_layer(self, standard_deviation, X)->'tf.keras.Dense':
+    def decoder_output_layer(self,
+        standard_deviation:'float',
+        X:'keras.layer')->'keras.Dense':
+        """
+        Auxiliary method to create a decoder output layer with a linear
+        activation function to account for high emission lines
+        think how to use it to my advantage
 
+        INPUTS
+            standard_deviation: For the purpose of initialization of the weights
+            X: previous hidden layer to the output of the decoder
+
+        OUTPUTS
+            output_layer: keras.Dense.Layer, the output layer
+        """
         initialization_weights = tf.keras.initializers.RandomNormal(
             mean=0., stddev=standard_deviation)
 
@@ -163,15 +207,7 @@ class VariationalAE:
 
         return output_layer
     ############################################################################
-    def vae_loss(self):
-# reconstruction_loss = keras.losses.binary_crossentropy(inputs, outputs)
-# reconstruction_loss *= original_dim
-# kl_loss = 1 + z_log_sigma - K.square(z_mean) - K.exp(z_log_sigma)
-# kl_loss = K.sum(kl_loss, axis=-1)
-# kl_loss *= -0.5
-# vae_loss = K.mean(reconstruction_loss + kl_loss)
-# vae.add_loss(vae_loss)
-# vae.compile(optimizer='adam')
+    def custom_loss(self):
         pass
     ############################################################################
     def fit(self, spectra:'2D np.array')-> 'None':
